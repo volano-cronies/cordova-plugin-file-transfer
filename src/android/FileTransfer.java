@@ -6,9 +6,7 @@
        to you under the Apache License, Version 2.0 (the
        "License"); you may not use this file except in compliance
        with the License.  You may obtain a copy of the License at
-
          http://www.apache.org/licenses/LICENSE-2.0
-
        Unless required by applicable law or agreed to in writing,
        software distributed under the License is distributed on an
        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -45,7 +43,6 @@ import org.apache.cordova.CordovaResourceApi.OpenForReadResult;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginManager;
 import org.apache.cordova.PluginResult;
-import org.apache.cordova.AllowList;
 import org.apache.cordova.file.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -676,25 +673,11 @@ public class FileTransfer extends CordovaPlugin {
             return;
         }
 
-        /* This code exists for compatibility between 3.x and 4.x versions of Cordova.
-         * Previously the CordovaWebView class had a method, getWhitelist, which would
-         * return a Whitelist object. Since the fixed whitelist is removed in Cordova 4.x,
-         * the correct call now is to shouldAllowRequest from the plugin manager.
-         */
         Boolean shouldAllowRequest = null;
         if (isLocalTransfer) {
             shouldAllowRequest = true;
         }
-        if (shouldAllowRequest == null) {
-            try {
-                Method gwl = webView.getClass().getMethod("getWhitelist");
-                AllowList whitelist = (AllowList)gwl.invoke(webView);
-                shouldAllowRequest = whitelist.isUrlAllowListed(source);
-            } catch (NoSuchMethodException e) {
-            } catch (IllegalAccessException e) {
-            } catch (InvocationTargetException e) {
-            }
-        }
+
         if (shouldAllowRequest == null) {
             try {
                 Method gpm = webView.getClass().getMethod("getPluginManager");
@@ -708,12 +691,11 @@ public class FileTransfer extends CordovaPlugin {
         }
 
         if (!Boolean.TRUE.equals(shouldAllowRequest)) {
-            LOG.w(LOG_TAG, "Source URL is not in white list: '" + source + "'");
+            LOG.w(LOG_TAG, "The Source URL is not in the Allow List: '" + source + "'");
             JSONObject error = createFileTransferError(CONNECTION_ERR, source, target, null, 401, null);
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.IO_EXCEPTION, error));
             return;
         }
-
 
         final RequestContext context = new RequestContext(source, target, callbackContext);
         synchronized (activeRequests) {
@@ -930,3 +912,16 @@ public class FileTransfer extends CordovaPlugin {
         }
     }
 }
+© 2021 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Docs
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Loading complete
